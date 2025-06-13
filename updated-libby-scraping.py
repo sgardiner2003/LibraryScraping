@@ -13,6 +13,7 @@ params = {
     "perPage": 24,
     "page": 1,
     "truncateDescription": "false",
+    "availability": "available", # only the available audiobooks; can delete to get all
     "includedFacets": [
         "availability",
         "mediaTypes",
@@ -40,11 +41,18 @@ while True:
     
     items = data.get('items', [])
     if not items:
-        break  # No more results
+        break # if no more results
     
-    # process items here
-    with open('audiobooks.json', 'a')
+    # save progress
+    with open('audiobooks.json', 'a') as f:
+        json.dump(items, f)
+
+    # stop if website blocks us
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        break
     
+    # to prevent overwhelming website
     time.sleep(2)
     page += 1
 
@@ -52,7 +60,7 @@ while True:
 data = response.json()
 # print(json.dumps(data['items'], indent=2)) # makes it look pretty
 
-# Print title and duration
+# metadata() is for title, author, readers, and duration of each item in items
 
 def metadata():
     titles = []
@@ -97,46 +105,3 @@ def metadata():
 # - want to exclude books where there is more than one narrator
 # - iterate over 'creators' section in each item, keep counter for how many narrators, while narrators = 1, index <= n, continue
 # - if we find another narrator then stops loop
-
-"""
-
-
-login_url = ('https://the-internet.herokuapp.com/authenticate')
-secure_url = ('https://the-internet.herokuapp.com/secure')
-
-payload = {
-    'username': creds.username,
-    'password': creds.password
-}
-
-# r = requests.post(login_url, data = payload) # gets us to secure area
-
-with requests.session() as s:
-    s.post(login_url, data=payload)
-    r = s.get(secure_url).text
-    soup = BS(r, 'lxml')
-    print(soup.prettify())
-
-### Libby attempt #1
-
-login_url = ('https://sentry.libbyapp.com/auth/link/327')
-secure_url = ('https://thunder.api.overdrive.com/v2/libraries/noble-stoneham/media?sortBy=newlyadded&format=ebook-overdrive,ebook-media-do,ebook-overdrive-provisional,audiobook-overdrive,audiobook-overdrive-provisional,magazine-overdrive&perPage=0&includedFacets=availability&includedFacets=mediaTypes&includedFacets=formats&includedFacets=maturityLevels&includedFacets=subjects&includedFacets=languages&includedFacets=boolean&includedFacets=addedDates&includedFacets=audiobookDuration&includedFacets=freshStart&x-client-id=dewey')
-secure_url2 = ('https://libbyapp.com/library/noble')
-
-payload = {
-    'ils': creds.ils,
-    'username': creds.username
-}
-
-with requests.session() as s:
-    s.post(login_url, data = payload)
-    r = s.get(secure_url2).text
-    soup = BS(r,'lxml')
-    #with open('test3', 'w') as test:
-    #    test.write(r)
-    print(soup.prettify())
-
-# Turns out that Libby uses javascript, so I have to use the API to get the actual html data
-# (which is hidden in a json file?)
-# Also, I don't need a library card to access this data somehow.
-"""
