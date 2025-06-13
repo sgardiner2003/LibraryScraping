@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup as BS
-import creds
 import json
 import time
 
 url = 'https://thunder.api.overdrive.com/v2/libraries/noble-stoneham/media'
+subject = 'fiction'
 
 params = {
     "sortBy": "newlyadded",
@@ -13,7 +13,8 @@ params = {
     "perPage": 24,
     "page": 1,
     "truncateDescription": "false",
-    "availability": "available", # only the available audiobooks; can delete to get all
+    # "availability": "available", # only the available audiobooks; can delete to get all
+    "subjects": subject,
     "includedFacets": [
         "availability",
         "mediaTypes",
@@ -34,17 +35,18 @@ headers = {
 }
 
 page = 1
-while True:
+while page < 101:
     params['page'] = page
     response = requests.get(url, params=params, headers=headers)
     data = response.json()
     
     items = data.get('items', [])
     if not items:
+        print("No books.")
         break # if no more results
     
     # save progress
-    with open('audiobooks.json', 'a') as f:
+    with open(f'{subject} audiobooks.json', 'a') as f:
         json.dump(items, f)
 
     # stop if website blocks us
@@ -52,6 +54,8 @@ while True:
         print(f'Error: {response.status_code}')
         break
     
+    print(f'Page {page} complete.') # to track progress
+
     # to prevent overwhelming website
     time.sleep(2)
     page += 1
